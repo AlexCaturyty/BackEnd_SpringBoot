@@ -11,7 +11,10 @@ COPY pom.xml .
 COPY src src
 
 # Build the application
-RUN mvn clean install -DskipTests
+RUN mvn clean package -DskipTests
+
+# Find the JAR file in the target directory (adjust the path accordingly)
+RUN cp $(find /app -name '*.jar' -type f -print | grep target) /app/app.jar
 
 # Use the official OpenJDK image as a base image
 FROM openjdk:17-slim
@@ -20,7 +23,7 @@ FROM openjdk:17-slim
 WORKDIR /app
 
 # Copy the JAR file from the build stage to the current stage
-COPY --from=build /app/target/*.jar app.jar
+COPY --from=build /app/app.jar .
 
 # Expose the port the application runs on
 EXPOSE 8080
