@@ -1,18 +1,8 @@
-
-FROM maven:3.8.4-openjdk-17 AS build
-
-WORKDIR /app
+FROM maven:3.8.5-openjdk-17 AS build
 COPY . .
+RUN mvn clean package -DskipTests
 
-RUN mvn clean install
-
-
-FROM openjdk:17-jdk-slim
-
-WORKDIR /app
-
+FROM openjdk:17.0.1-jdk-slim
+COPY --from=build /target/demo-0.0.1-SNAPSHOT.jar demo.jar
 EXPOSE 8080
-
-COPY --from=build /app/target/deploy_render-1.0.0.jar app.jar
-
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java","-jar","demo.jar"]
