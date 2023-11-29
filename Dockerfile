@@ -1,27 +1,29 @@
-# Utilizar uma imagem base do OpenJDK para rodar a aplicação
-FROM openjdk:17-jdk-alpine as build
+# Use the official Maven image as a base image
+FROM maven:3.8.4-openjdk-17-slim AS build
 
-# Definir o diretório de trabalho no container
-WORKDIR /workspace/app
+# Set the working directory to /app
+WORKDIR /app
 
-# Copiar o arquivo pom.xml e os arquivos de código fonte
-COPY mvnw .
-COPY .mvn .mvn
+# Copy the POM file to the working directory
 COPY pom.xml .
+
+# Copy the entire project to the working directory
 COPY src src
 
-# Construir o aplicativo com Maven
-RUN ./mvnw install -DskipTests
+# Build the application
+RUN mvn clean install -DskipTests
 
-# Segunda etapa da construção, para obter uma imagem mais limpa e leve
-FROM openjdk:17-jdk-alpine
-VOLUME /tmp
+# Use the official OpenJDK image as a base image
+FROM openjdk:17-slim
 
-# Copiar o arquivo JAR do estágio de construção para o estágio de execução
-COPY --from=build /workspace/app/target/curriculo-0.0.1-SNAPSHOT.jar app.jar
+# Set the working directory to /app
+WORKDIR /app
 
-# Indicar que o container irá escutar na porta 8080
+# Copy the JAR file from the build stage to the current stage
+COPY --from=build /app/target/*.jar app.jar
+
+# Expose the port the application runs on
 EXPOSE 8080
 
-# Comando para executar a aplicação
-ENTRYPOINT ["java","-jar","/app.jar"]
+# Specify the command to run on container start
+CMD ["java", "-jar", "app.jar"]
